@@ -3,7 +3,6 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from utils import MLPBase
-import torchfold
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -219,6 +218,8 @@ class CriticGraphPolicy(nn.Module):
     def forward(self, state, action):
         self.clear_buffer()
         if not self.disable_fold:
+            import torchfold  # only needed by the smp critic's folded batching path
+
             self.fold = torchfold.Fold()
             self.fold.cuda()
             self.zeroFold_td = self.fold.add("zero_func_td")
@@ -285,6 +286,8 @@ class CriticGraphPolicy(nn.Module):
     def Q1(self, state, action):
         self.clear_buffer()
         if not self.disable_fold:
+            import torchfold  # only needed by the smp critic's folded batching path
+
             self.fold = torchfold.Fold()
             self.fold.cuda()
             self.zeroFold_td = self.fold.add("zero_func_td")

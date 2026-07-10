@@ -18,7 +18,7 @@ def get_args():
         "--morphologies",
         nargs="*",
         type=str,
-        default=["walker"],
+        default=["ant"],
         help="which morphology env to run (walker, hopper, etc)",
     )
     parser.add_argument(
@@ -26,6 +26,17 @@ def get_args():
         type=str,
         default=None,
         help="path to MuJoCo xml files (can be either one file or a directory containing multiple files)",
+    )
+    parser.add_argument(
+        "--wandb_project",
+        type=str,
+        default="modular-rl",
+        help="Weights & Biases project name to log training curves to",
+    )
+    parser.add_argument(
+        "--disable_wandb",
+        action="store_true",
+        help="disable logging to Weights & Biases",
     )
     parser.add_argument(
         "--start_timesteps",
@@ -125,15 +136,15 @@ def get_args():
     parser.add_argument(
         "--actor_type",
         type=str,
-        default="swat",
-        choices=["smp", "transformer", "swat"],
+        default="parent_aware",
+        choices=["smp", "transformer", "swat", "parent_aware"],
         help="Type of the actor to use",
     )
     parser.add_argument(
         "--critic_type",
         type=str,
-        default="swat",
-        choices=["smp", "transformer", "swat"],
+        default="parent_aware",
+        choices=["smp", "transformer", "swat", "parent_aware"],
         help="Type of the critic to use",
     )
     parser.add_argument(

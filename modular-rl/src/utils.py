@@ -1,4 +1,5 @@
 from __future__ import print_function
+import setuptools  # noqa: F401 -- must import before gym: shims distutils, removed in Python 3.12+
 import os
 import numpy as np
 import torch
@@ -7,15 +8,41 @@ import torch.nn.functional as F
 import xmltodict
 import wrappers
 import gym
-from gym.envs.registration import register
+from gym.envs.registration import register, registry
 from shutil import copyfile
 from config import *
 
 
 def makeEnvWrapper(env_name, obs_max_len=None, seed=0):
     """return wrapped gym environment for parallel sample collection (vectorized environments)"""
+    # capture the already-registered EnvSpec's data now (in this process), so
+    # `helper` can re-register it if called in a different process: SubprocVecEnv
+    # runs helper() inside a spawned worker process, which starts with a fresh
+    # Python interpreter (and therefore an empty gym registry) rather than
+    # inheriting this process's memory -- true for multiprocessing's "spawn"
+    # start method, the default on macOS/Windows.
+    env_id = "%s-v0" % env_name
+    spec = registry.env_specs[env_id]
+    entry_point = spec._entry_point
+    kwargs = spec._kwargs
+    max_episode_steps = spec.max_episode_steps
 
     def helper():
+        # re-import (rather than close over the module-level `register`/`registry`
+        # names) so this always resolves to whichever process's live gym registry
+        # is current: cloudpickle pickles a plain object like `registry` by value
+        # (a frozen snapshot taken at pickle time), not by reference, so a closure
+        # over the name directly would silently check/mutate a disconnected copy
+        # in a spawned worker process instead of the registry gym.make() reads.
+        import gym.envs.registration as _gym_registration
+
+        if env_id not in _gym_registration.registry.env_specs:
+            _gym_registration.register(
+                id=env_id,
+                max_episode_steps=max_episode_steps,
+                entry_point=entry_point,
+                kwargs=kwargs,
+            )
         e = gym.make("environments:%s-v0" % env_name)
         e.seed(seed)
         return wrappers.ModularEnvWrapper(e, obs_max_len)
@@ -63,15 +90,16 @@ def registerEnvs(env_names, max_episode_steps, custom_xml):
             )
         params = {"xml": os.path.abspath(xml)}
         # register with gym
-
         entry_point = "environments.%s:ModularEnv" % \
                         (env_file if env_dir is None else f'{env_dir}.{env_file}')
-        # register(
-        #     id=("%s-v0" % env_name),
-        #     max_episode_steps=max_episode_steps,
-        #     entry_point=entry_point,
-        #     kwargs=params,
-        # )
+        env_id = "%s-v0" % env_name
+        if env_id not in registry.env_specs:
+            register(
+                id=env_id,
+                max_episode_steps=max_episode_steps,
+                entry_point=entry_point,
+                kwargs=params,
+            )
         wrapper_point = ("environments:%s-v0" % env_name) \
                             if env_dir is None else f'environments.{env_dir}:{env_name}-v0'
         env = wrappers.IdentityWrapper(gym.make(wrapper_point))

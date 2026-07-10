@@ -1,4 +1,5 @@
 from __future__ import print_function
+import setuptools  # noqa: F401 -- must import before gym: shims distutils, removed in Python 3.12+
 import numpy as np
 import gym
 import utils

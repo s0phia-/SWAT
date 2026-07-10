@@ -1,0 +1,36 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3 -m py_compile ParentAwareActor.py ParentAwareCritic.py)",
+      "Bash(python3 -c \"import sys; print\\(sys.path\\)\")",
+      "Bash(pip3 show *)",
+      "Bash(conda env *)",
+      "Bash(python3 -m py_compile ParentAwareActor.py ParentAwareCritic.py TD3.py arguments.py main.py)",
+      "Bash(python3 -)",
+      "Skill(artifact-design)",
+      "Skill(artifact-design:*)",
+      "Bash(python3 -m py_compile utils.py environments/ant_9_full.py environments/ant_7_3legs.py environments/ant_5_2legs_diag.py environments/ant_13_3seg.py)",
+      "Bash(python3 -c \"import xmltodict\")",
+      "Bash(pip3 install *)",
+      "Bash(python3 -c \"import xmltodict; print\\('ok'\\)\")",
+      "Bash(pyenv versions *)",
+      "Read(//usr/local/bin/**)",
+      "Bash(docker --version)",
+      "Bash(python3 -c \"import mujoco; print\\('mujoco', mujoco.__version__\\)\")",
+      "Bash(pip3 download *)",
+      "Read(//tmp/**)",
+      "Bash(tar xzf *)",
+      "Bash(python3 -c ' *)",
+      "Bash(python3 -c \"import cloudpickle; print\\(cloudpickle.__version__\\)\")",
+      "Bash(pip3 index *)",
+      "Bash(python3 /private/tmp/claude-502/-Users-sj2073-Documents-Projects-SWAT/b73a9cc6-040c-47c1-afcf-5cc9e6d193a2/scratchpad/test_vecenv.py)",
+      "Bash(python3 -c \"import torch; print\\(torch.__version__\\)\")",
+      "Bash(python3 -m py_compile main.py utils.py wrappers.py ModularActor.py ModularCritic.py vec_env.py mujoco_env_compat.py)",
+      "Bash(pip3 uninstall *)",
+      "Bash(python3 -m py_compile /Users/sj2073/Documents/Projects/SWAT/modular-rl/src/main.py)",
+      "Bash(timeout 90 python3 main.py --morphologies ant_9_full --actor_type swat --critic_type swat --max_timesteps 2000 --start_timesteps 100 --batch_size 16 --disable_wandb --expID smoketest)",
+      "Bash(python3 main.py --morphologies ant_9_full --actor_type swat --critic_type swat --max_timesteps 2000 --start_timesteps 100 --batch_size 16 --disable_wandb --expID smoketest)",
+      "Bash(python3 -m json.tool)"
+    ]
+  }
+}

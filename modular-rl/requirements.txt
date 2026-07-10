@@ -1,60 +1,47 @@
-absl-py==0.7.1
-astor==0.8.0
-blessings==1.7
-certifi==2019.6.16
-cffi==1.12.3
-chardet==3.0.4
-cloudpickle==1.2.1
-cycler==0.10.0
-Cython==0.29.12
-future==0.17.1
-gast==0.2.2
-glfw==1.8.2
-google-pasta==0.1.7
-gpustat==0.5.0
-grpcio==1.22.0
-gym==0.13.1
-h5py==2.9.0
-idna==2.8
-imageio==2.5.0
-Keras-Applications==1.0.8
-Keras-Preprocessing==1.1.0
-kiwisolver==1.1.0
-lockfile==0.12.2
-Markdown==3.1.1
-matplotlib==3.1.1
-mujoco-py==2.0.2.4
-numpy==1.16.4
-nvidia-ml-py3==7.352.0
-opencv-python==4.1.0.25
-pillow>=6.2.2
-protobuf==3.8.0
-psutil==5.6.6
-pycparser==2.19
-pyglet==1.3.2
-pyparsing==2.4.0
-python-dateutil==2.8.0
-pyzmq==18.0.2
-requests==2.22.0
-scipy==1.3.0
-setuptools==41.0.1
-six==1.12.0
-tensorboard==1.14.0
-tensorboardX==1.8
-tensorflow-estimator==1.14.0
-tensorflow-gpu==1.15.2
-termcolor==1.1.0
-torch==1.1.0
-torchfile==0.1.0
-torchvision==0.3.0
-tornado==6.0.3
-urllib3==1.25.3
-visdom==0.1.8.8
-websocket-client==0.56.0
-Werkzeug==0.15.4
-wrapt==1.11.2
-xmltodict==0.12.0
-wheel==0.33.6
-baselines==0.1.5
-git+git://github.com/CampagneLaboratory/torchfold@c2ac41b#egg=torchfold
+# NOTE: this file was originally pinned circa 2019 and largely could not
+# install on modern Python (Python 3.12+ removed distutils, which old gym
+# needs -- see setuptools note below; and several packages' own setup.py
+# scripts reject modern Python outright). It has since been audited against
+# an actual `grep` of every import in src/*.py: everything below is either
+# genuinely used, or (torchfold) lazily-imported and only needed for one
+# specific --actor_type/--critic_type. Every other 2019-era pin that wasn't
+# actually imported anywhere (tensorflow, baselines, opencv, matplotlib,
+# visdom, tensorboard, wandb-adjacent transitive deps, etc.) has been removed
+# rather than fixed one broken build at a time.
+#
+# INSTALL IN TWO STEPS -- gym==0.13.1 is NOT listed below on purpose:
+#   pip install --no-deps gym==0.13.1
+#   pip install -r requirements.txt
+# gym's own setup.py hard-pins scipy/six/pyglet<=1.3.2/cloudpickle~=1.2.0.
+# Of those, gym actually imports `six` at runtime just to import gym.spaces/
+# gym.utils.seeding (both of which we do use), so it's listed explicitly
+# below even though it's really gym's dependency, not this repo's. pyglet
+# and scipy are NOT needed -- gym only reaches for those in its classic_
+# control/box2d rendering, which nothing here touches -- and cloudpickle
+# needs to be >=3.0 here, conflicting with gym's declared ~=1.2.0 pin.
+# Installing gym normally alongside this file's cloudpickle>=3.0 requirement
+# is an unresolvable conflict: pip won't let both cloudpickle~=1.2.0 and
+# >=3.0 be satisfied at once. --no-deps sidesteps it entirely by never
+# asking pip to satisfy gym's stale pins in the first place.
 
+# -- core training pipeline (main.py): validated working on Python 3.14 / arm64 --
+setuptools  # must import before gym: shims distutils, removed in Python 3.12+
+six  # gym==0.13.1 itself does `from six import integer_types` in gym/utils/seeding.py
+mujoco  # replaces mujoco-py: mujoco-py needs an activation-key/license-server
+        # flow MuJoCo dropped in 2021, and has no arm64 wheels
+cloudpickle>=3.0  # >=3.0 required: older cloudpickle can't parse Python 3.12+ bytecode
+torch
+numpy
+xmltodict==0.12.0
+wandb  # training-curve logging; run `wandb login` once, or pass --disable_wandb
+
+# -- only needed for --actor_type/--critic_type smp (ModularActor/ModularCritic's
+# folded batching path); import is now lazy, so this is optional otherwise.
+# torchfold is unmaintained (last touched ~2018) and may not build against a
+# modern torch's C++ ABI -- untested this session.
+git+https://github.com/CampagneLaboratory/torchfold@c2ac41b#egg=torchfold
+
+# -- only needed for visualize.py (video generation); also needs the `ffmpeg`
+# binary on PATH (e.g. `brew install ffmpeg`) -- that's a system tool, not a
+# pip package, so it isn't listed here.
+pillow>=6.2.2

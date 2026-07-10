@@ -3,7 +3,6 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from utils import MLPBase
-import torchfold
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -192,6 +191,8 @@ class ActorGraphPolicy(nn.Module):
             temp = self.batch_size
             self.batch_size = 1
         if not self.disable_fold:
+            import torchfold  # only needed by the smp actor's folded batching path
+
             self.fold = torchfold.Fold()
             self.fold.cuda()
             self.zeroFold_td = self.fold.add("zero_func_td")

@@ -1,6 +1,6 @@
 import numpy as np
 from gym import utils
-from gym.envs.mujoco import mujoco_env
+import mujoco_env_compat as mujoco_env
 from utils import *
 
 

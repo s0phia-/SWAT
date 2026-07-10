@@ -3,16 +3,15 @@ from __future__ import print_function
 import numpy as np
 import torch
 import os
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 import utils
 import TD3
 import json
 import time
+import wandb
 from arguments import get_args
-from baselines.common.vec_env.subproc_vec_env import SubprocVecEnv
+from vec_env import SubprocVecEnv
 import checkpoint as cp
 from config import *
-import wandb
 
 
 def train(args):
@@ -25,6 +24,13 @@ def train(args):
     # save arguments
     with open(os.path.join(exp_path, "args.txt"), "w+") as f:
         json.dump(args.__dict__, f, indent=2)
+
+    wandb.init(
+        project=args.wandb_project,
+        name=args.run_name,
+        config=args.__dict__,
+        mode="disabled" if args.disable_wandb else "online",
+    )
 
     # Retrieve MuJoCo XML files for training ========================================
     envs_train_names = []
@@ -110,7 +116,7 @@ def train(args):
         args.max_children = utils.findMaxChildren(envs_train_names, args.graphs)
 
     args.max_num_limbs = max_num_limbs
-    if args.actor_type == 'swat':
+    if args.actor_type in ['swat', 'parent_aware']:
         args.rel_size = args.graph_dicts[envs_train_names[0]]['relation'].shape[-1]
         
         
@@ -155,7 +161,7 @@ def train(args):
 
     # best_checkpoint_cache = None
     timestep_to_next_saving = args.max_timesteps // 20 # every 0.5M
-    # timestep_to_next_saving_log = args.max_timesteps // 100 # every 0.1M
+    timestep_to_next_saving_log = args.max_timesteps // 100 # every 0.1M
     
     count_last_saving_log = 1
     best_return = -1000
@@ -194,6 +200,7 @@ def train(args):
                     stat[f"{envs_train_names[i]}_episode_len"] = float(episode_timesteps_list[i])
                 for key in stats:
                   stats[key].append(stat[key])
+                wandb.log(stat, step=total_timesteps)
                 if count_last_saving_log * timestep_to_next_saving_log < total_timesteps:
                     count_last_saving_log = total_timesteps // timestep_to_next_saving_log + 1
                     with open(os.path.join(exp_path, 'stat.json'), 'w') as f:
@@ -312,6 +319,7 @@ def train(args):
     with open(os.path.join(exp_path, 'stat.json'), 'w') as f:
         json.dump(stats, f, indent=2)
     print("*** training finished and model saved to {} ***".format(model_saved_path))
+    wandb.finish()
 
 
 if __name__ == "__main__":

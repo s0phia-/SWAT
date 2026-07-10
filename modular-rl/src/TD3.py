@@ -8,6 +8,8 @@ from TransformerActor import TransformerPolicy
 from TransformerCritic import CriticTransformerPolicy
 from StructureActor import StructurePolicy
 from StructureCritic import CriticStructurePolicy
+from ParentAwareActor import StructurePolicy as ParentAwareStructurePolicy
+from ParentAwareCritic import CriticStructurePolicy as ParentAwareCriticStructurePolicy
 import random
 import time
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -24,6 +26,8 @@ class TD3(object):
             actor = TransformerPolicy
         elif args.actor_type == 'smp':
             actor = ActorGraphPolicy
+        elif args.actor_type == 'parent_aware':
+            actor = ParentAwareStructurePolicy
         else:
             raise NotImplementedError
 
@@ -57,6 +61,8 @@ class TD3(object):
             critic = CriticTransformerPolicy
         elif args.critic_type == 'smp':
             critic = CriticGraphPolicy
+        elif args.critic_type == 'parent_aware':
+            critic = ParentAwareCriticStructurePolicy
         else:
             raise NotImplementedError
 
