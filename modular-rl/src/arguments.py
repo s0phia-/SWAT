@@ -18,7 +18,7 @@ def get_args():
         "--morphologies",
         nargs="*",
         type=str,
-        default=["ant"],
+        default=["humanoid_2d"],
         help="which morphology env to run (walker, hopper, etc)",
     )
     parser.add_argument(

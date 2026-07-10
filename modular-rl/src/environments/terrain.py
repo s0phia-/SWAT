@@ -72,9 +72,9 @@ def inject_terrain(
     obstacle_lateral_range: float = 12.0,
     obstacle_floor_extent: float = 200.0,
     hfield_radius: float = 150.0,
-    hfield_max_height: float = 0.5,
+    hfield_max_height: float = 2.7,
     hfield_resolution: int = 400,
-    hfield_smoothing: int = 4,
+    hfield_smoothing: int = 2,
     incline_deg: float = 10.0,
     incline_floor_extent: float = 200.0,
 ) -> Tuple[str, Optional[np.ndarray]]:

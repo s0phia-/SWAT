@@ -331,5 +331,6 @@ def train(args):
 
 if __name__ == "__main__":
     args = get_args()
-    args.run_name = f'{args.label}_{args.seed}'
+    morphologies_label = "-".join(args.morphologies) if args.morphologies else "custom_xml"
+    args.run_name = f'{args.terrain}_{args.actor_type}_{morphologies_label}_{args.seed}'
     train(args)
