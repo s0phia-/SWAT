@@ -6,9 +6,9 @@ import os
 
 
 class ModularEnv(mujoco_env.MujocoEnv, utils.EzPickle):
-    def __init__(self, xml):
+    def __init__(self, xml, terrain="flat", seed=None, direction_deg=0.0):
         self.xml = xml
-        mujoco_env.MujocoEnv.__init__(self, xml, 4)
+        mujoco_env.MujocoEnv.__init__(self, xml, 4, terrain=terrain, seed=seed, direction_deg=direction_deg)
         utils.EzPickle.__init__(self)
 
     def _get_obs(self):
@@ -78,7 +78,7 @@ class ModularEnv(mujoco_env.MujocoEnv, utils.EzPickle):
         reward -= 1e-3 * np.square(a).sum()
         qpos = self.sim.data.qpos
         done = not (height > 0.4 and height < 2.1 and ang > -1.0 and ang < 1.0)
-        return self._get_obs(), reward, done, {}
+        return self._get_obs(), reward, done, {"x_position": posafter}
 
     def reset_model(self):
         self.set_state(

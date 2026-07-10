@@ -6,9 +6,9 @@ import os
 
 
 class ModularEnv(mujoco_env.MujocoEnv, utils.EzPickle):
-    def __init__(self, xml):
+    def __init__(self, xml, terrain="flat", seed=None, direction_deg=0.0):
         self.xml = xml
-        mujoco_env.MujocoEnv.__init__(self, xml, 4)
+        mujoco_env.MujocoEnv.__init__(self, xml, 4, terrain=terrain, seed=seed, direction_deg=direction_deg)
         utils.EzPickle.__init__(self)
 
     def step(self, a):
@@ -26,7 +26,7 @@ class ModularEnv(mujoco_env.MujocoEnv, utils.EzPickle):
         # planar morphologies (hopper/humanoid/walker)
         done = not (np.isfinite(s).all() and 0.2 <= torso_height <= 1.0)
         ob = self._get_obs()
-        return ob, reward, done, {}
+        return ob, reward, done, {"x_position": posafter}
 
     def _get_obs(self):
         def _get_obs_per_limb(b):

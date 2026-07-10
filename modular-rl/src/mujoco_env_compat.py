@@ -24,6 +24,8 @@ import gym
 from gym import spaces
 from gym.utils import seeding
 
+from environments.terrain import inject_terrain, get_obstacle_geom_ids, recycle_obstacles
+
 DEFAULT_SIZE = 500
 
 
@@ -168,7 +170,8 @@ class MujocoEnv(gym.Env):
     """Superclass for all MuJoCo environments -- same public surface as
     gym==0.13.1's gym.envs.mujoco.mujoco_env.MujocoEnv, backed by `mujoco`."""
 
-    def __init__(self, model_path, frame_skip, rgb_rendering_tracking=True):
+    def __init__(self, model_path, frame_skip, rgb_rendering_tracking=True,
+                 terrain="flat", seed=None, direction_deg=0.0, terrain_kwargs=None):
         if model_path.startswith("/"):
             fullpath = model_path
         else:
@@ -176,12 +179,29 @@ class MujocoEnv(gym.Env):
         if not os.path.exists(fullpath):
             raise IOError("File %s does not exist" % fullpath)
         self.frame_skip = frame_skip
-        self.sim = _Sim(mujoco.MjModel.from_xml_path(fullpath))
+
+        # terrain (default "flat") wraps the agent's own xml in a temp copy
+        # with terrain geoms added; the agent's kinematic tree itself is
+        # never touched -- see environments/terrain.py
+        terrain_xml_path, hfield_heights = inject_terrain(
+            fullpath, terrain=terrain, seed=seed, direction_deg=direction_deg,
+            **(terrain_kwargs or {}))
+        self.sim = _Sim(mujoco.MjModel.from_xml_path(terrain_xml_path))
         self.model = self.sim.model
         self.data = self.sim.data
         self.viewer = None
         self.rgb_rendering_tracking = rgb_rendering_tracking
         self._viewers = {}
+
+        if hfield_heights is not None:
+            self.model.hfield_data[:] = hfield_heights.ravel()
+        # obstacle recycling needs its own rng and heading (do_simulation uses
+        # these on every step) -- set before the auto-inference step() call
+        # below, which already exercises do_simulation once.
+        self._terrain_direction_deg = direction_deg
+        self._terrain_rng = np.random.default_rng(seed)
+        self._obstacle_geom_ids = (
+            get_obstacle_geom_ids(self.model) if terrain == "obstacles" else [])
 
         self.metadata = {
             "render.modes": ["human", "rgb_array", "depth_array"],
@@ -247,6 +267,12 @@ class MujocoEnv(gym.Env):
         self.sim.data.ctrl[:] = ctrl
         for _ in range(n_frames):
             self.sim.step()
+        if self._obstacle_geom_ids:
+            # qpos[:2] is the agent's (x, y): only correct for a free-joint
+            # (3D) root -- terrain='obstacles' is only meant for those.
+            agent_xy = self.sim.data.qpos[:2].copy()
+            recycle_obstacles(self.model, agent_xy, self._terrain_direction_deg,
+                              self._terrain_rng, self._obstacle_geom_ids)
 
     def render(self, mode="human", width=DEFAULT_SIZE, height=DEFAULT_SIZE):
         if mode == "rgb_array":

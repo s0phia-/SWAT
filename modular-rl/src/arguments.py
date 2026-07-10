@@ -28,6 +28,15 @@ def get_args():
         help="path to MuJoCo xml files (can be either one file or a directory containing multiple files)",
     )
     parser.add_argument(
+        "--terrain",
+        type=str,
+        default="flat",
+        choices=["flat", "variable", "obstacles", "incline"],
+        help="ground terrain: flat, variable (rough), obstacles, or incline (uphill). "
+             "'obstacles' only makes sense for a free-roaming 3D morphology (e.g. ant); "
+             "for 2D-planar morphologies (cheetah, humanoid_2d) use variable or incline.",
+    )
+    parser.add_argument(
         "--wandb_project",
         type=str,
         default="modular-rl",

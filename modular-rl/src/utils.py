@@ -59,7 +59,7 @@ def findMaxChildren(env_names, graphs):
     return max_children
 
 
-def registerEnvs(env_names, max_episode_steps, custom_xml):
+def registerEnvs(env_names, max_episode_steps, custom_xml, terrain="flat", seed=None):
     """register the MuJoCo envs with Gym and return the per-limb observation size and max action value (for modular policy training)"""
     # get all paths to xmls (handle the case where the given path is a directory containing multiple xml files)
     paths_to_register = []
@@ -88,7 +88,7 @@ def registerEnvs(env_names, max_episode_steps, custom_xml):
             copyfile(
                 BASE_MODULAR_ENV_PATH, "{}.py".format(os.path.join(ENV_DIR, env_name))
             )
-        params = {"xml": os.path.abspath(xml)}
+        params = {"xml": os.path.abspath(xml), "terrain": terrain, "seed": seed}
         # register with gym
         entry_point = "environments.%s:ModularEnv" % \
                         (env_file if env_dir is None else f'{env_dir}.{env_file}')

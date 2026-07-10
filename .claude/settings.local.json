@@ -30,7 +30,17 @@
       "Bash(python3 -m py_compile /Users/sj2073/Documents/Projects/SWAT/modular-rl/src/main.py)",
       "Bash(timeout 90 python3 main.py --morphologies ant_9_full --actor_type swat --critic_type swat --max_timesteps 2000 --start_timesteps 100 --batch_size 16 --disable_wandb --expID smoketest)",
       "Bash(python3 main.py --morphologies ant_9_full --actor_type swat --critic_type swat --max_timesteps 2000 --start_timesteps 100 --batch_size 16 --disable_wandb --expID smoketest)",
-      "Bash(python3 -m json.tool)"
+      "Bash(python3 -m json.tool)",
+      "Bash(python3 -m py_compile environments/terrain.py)",
+      "Bash(python3 -m py_compile mujoco_env_compat.py)",
+      "Bash(python3 -m py_compile ant_9_full.py ant_7_3legs.py ant_5_2legs_diag.py ant_13_3seg.py cheetah_2_back.py cheetah_2_front.py cheetah_3_back.py cheetah_3_balanced.py cheetah_3_front.py cheetah_4_allback.py cheetah_4_allfront.py cheetah_4_back.py cheetah_4_front.py cheetah_5_back.py cheetah_5_balanced.py cheetah_5_front.py cheetah_6_back.py cheetah_6_front.py cheetah_7_full.py humanoid_2d_7_left_arm.py humanoid_2d_7_left_leg.py humanoid_2d_7_lower_arms.py humanoid_2d_7_right_arm.py humanoid_2d_7_right_leg.py humanoid_2d_8_left_knee.py humanoid_2d_8_right_knee.py humanoid_2d_9_full.py ModularEnv.py)",
+      "Bash(python3 -m py_compile arguments.py utils.py main.py mujoco_env_compat.py)",
+      "Bash(python3 /private/tmp/claude-502/-Users-sj2073-Documents-Projects-SWAT/b73a9cc6-040c-47c1-afcf-5cc9e6d193a2/scratchpad/test_terrain_vecenv.py)",
+      "Bash(python3 main.py --morphologies ant_9_full --actor_type parent_aware --critic_type parent_aware --terrain incline --max_timesteps 1500 --start_timesteps 100 --batch_size 16 --disable_wandb --expID terrain_smoketest)",
+      "Bash(ffmpeg -version)",
+      "Bash(python3 -c \"import mujoco; r = mujoco.Renderer.__init__; print\\('Renderer class available'\\)\")",
+      "Bash(python3 /private/tmp/claude-502/-Users-sj2073-Documents-Projects-SWAT/b73a9cc6-040c-47c1-afcf-5cc9e6d193a2/scratchpad/render_flythrough.py)",
+      "Bash(python3 /private/tmp/claude-502/-Users-sj2073-Documents-Projects-SWAT/b73a9cc6-040c-47c1-afcf-5cc9e6d193a2/scratchpad/render_flythrough_v2.py)"
     ]
   }
 }

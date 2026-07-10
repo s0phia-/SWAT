@@ -95,7 +95,8 @@ def train(args):
 
     # Set up training env and policy ================================================
     args.limb_obs_size, args.max_action = utils.registerEnvs(
-        envs_train_names, args.max_episode_steps, args.custom_xml
+        envs_train_names, args.max_episode_steps, args.custom_xml,
+        terrain=args.terrain, seed=args.seed,
     )
     max_num_limbs = max([len(args.graphs[env_name]) for env_name in envs_train_names])
     # create vectorized training env
@@ -171,6 +172,7 @@ def train(args):
     for i in range(num_envs_train):
         stats[f"{envs_train_names[i]}_episode_reward"] = []
         stats[f"{envs_train_names[i]}_episode_len"] = []
+        stats[f"{envs_train_names[i]}_episode_distance"] = []
 
     while total_timesteps < args.max_timesteps:
         # train and log after one episode for each env
@@ -198,6 +200,7 @@ def train(args):
                 for i in range(num_envs_train):
                     stat[f"{envs_train_names[i]}_episode_reward"] = float(episode_reward_list[i])
                     stat[f"{envs_train_names[i]}_episode_len"] = float(episode_timesteps_list[i])
+                    stat[f"{envs_train_names[i]}_episode_distance"] = float(episode_distance_list[i])
                 for key in stats:
                   stats[key].append(stat[key])
                 wandb.log(stat, step=total_timesteps)
@@ -227,6 +230,9 @@ def train(args):
             done_list = [False for i in range(num_envs_train)]
             episode_reward_list = [0 for i in range(num_envs_train)]
             episode_timesteps_list = [0 for i in range(num_envs_train)]
+            # each episode starts at ~x=0 (reset_model perturbs qpos by at most
+            # +-0.005), so net displacement is just the x_position at episode end
+            episode_distance_list = [0 for i in range(num_envs_train)]
             episode_num += num_envs_train
             # create reward buffer to store reward for one sub-env when it is not done
             episode_reward_list_buffer = [0 for i in range(num_envs_train)]
@@ -270,7 +276,7 @@ def train(args):
                 action_list.append(policy_action)
 
         # perform action in the environment
-        new_obs_list, reward_list, curr_done_list, _ = envs_train.step(action_list)
+        new_obs_list, reward_list, curr_done_list, infos = envs_train.step(action_list)
 
         # record if each env has ever been 'done'
         done_list = [done_list[i] or curr_done_list[i] for i in range(num_envs_train)]
@@ -282,6 +288,7 @@ def train(args):
             if curr_done_list[i] and episode_reward_list[i] == 0:
                 episode_reward_list[i] = episode_reward_list_buffer[i]
                 episode_reward_list_buffer[i] = 0
+                episode_distance_list[i] = infos[i]["x_position"]
             done_bool = float(curr_done_list[i])
             if episode_timesteps_list[i] + 1 == args.max_episode_steps:
                 done_bool = 0
