@@ -35,16 +35,28 @@ class TransformerModel(nn.Module):
         self.encoder = nn.Linear(feature_size, ninp)
         self.ninp = ninp
         self.condition_decoder = condition_decoder
-        self.decoder = nn.Linear(
-            ninp + feature_size if condition_decoder else ninp, output_size
+
+        ninp_dec = ninp + feature_size if condition_decoder else ninp
+        self.decoder_norm = nn.LayerNorm(ninp_dec) if transformer_norm else nn.Identity()
+        decoder_hidden_size = 256
+
+        self.decoder = nn.Sequential(
+            self.decoder_norm,
+            nn.Linear(ninp_dec, decoder_hidden_size),
+            nn.ReLU(),
+            nn.Linear(decoder_hidden_size, decoder_hidden_size),
+            nn.ReLU(),
+            nn.Linear(decoder_hidden_size, output_size),
         )
         self.init_weights()
 
     def init_weights(self):
         initrange = 0.1
         self.encoder.weight.data.uniform_(-initrange, initrange)
-        self.decoder.bias.data.zero_()
-        self.decoder.weight.data.uniform_(-initrange, initrange)
+        for layer in self.decoder:
+            if isinstance(layer, nn.Linear):
+                layer.bias.data.zero_()
+                layer.weight.data.uniform_(-initrange, initrange)
 
     def forward(self, src):
         encoded = self.encoder(src) * math.sqrt(self.ninp)

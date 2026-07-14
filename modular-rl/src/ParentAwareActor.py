@@ -148,14 +148,26 @@ class TransformerModel(nn.Module):
         ninp_dec = ninp_att + feature_size if condition_decoder else ninp_att
         ninp_dec += output_size  # parent conditioning
 
-        self.decoder = nn.Linear(ninp_dec, output_size)
+        self.decoder_norm = nn.LayerNorm(ninp_dec) if transformer_norm else nn.Identity()
+        decoder_hidden_size = 256
+
+        self.decoder = nn.Sequential(
+            self.decoder_norm,
+            nn.Linear(ninp_dec, decoder_hidden_size),
+            nn.ReLU(),
+            nn.Linear(decoder_hidden_size, decoder_hidden_size),
+            nn.ReLU(),
+            nn.Linear(decoder_hidden_size, output_size),
+        )
         self.init_weights()
 
     def init_weights(self):
         initrange = 0.1
         self.encoder.weight.data.uniform_(-initrange, initrange)
-        self.decoder.bias.data.zero_()
-        self.decoder.weight.data.uniform_(-initrange, initrange)
+        for layer in self.decoder:
+            if isinstance(layer, nn.Linear):
+                layer.bias.data.zero_()
+                layer.weight.data.uniform_(-initrange, initrange)
 
     def encode(self, src, graph):
         """Per-node transformer features, before parent-conditioning/decoding: [N, B, ninp_dec]."""
